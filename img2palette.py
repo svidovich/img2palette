@@ -5,7 +5,7 @@ import time
 
 from numpy import ndarray
 from PIL import Image
-from sklearn.cluster import DBSCAN
+from sklearn.cluster import KMeans
 from typing import List, Tuple
 
 def read_image(path: str):
@@ -34,20 +34,17 @@ def read_image(path: str):
     # cluster hierarchy for a variable neighborhood radius. Better suited for usage on large datasets 
     # than the current sklearn implementation of DBSCAN.
     # Author's note:
-    # min_samples chooses the minimum number of points around a vector to constitute a neighborhood.
-    # By choosing a high value, we're hoping to have larger, but fewer, clusters.
-    # eps defines the distance required to constitute 'in the neighborhood'. Since RGB colors are
-    # in the interval [0, 255], let's try out ~1% of 255, based on a 'why not' kind of philosophy. 
-    # We're choosing a Euclidean distance to keep things simple and to keep my brain thoughts thinking good.
-    # Going Minkowski ( or god forbid something more complex ) has a lot of implications that I don't have a 
-    # great intuition for, but Euclidean distances make sense in my smooth, caveman brain.
-    model = DBSCAN(min_samples=15, eps=2.55)
+    # In K Means, we choose the number of clusters we want. I like that.
+    model = KMeans(n_clusters = 9)
     print('Fitting ( this may take some time )...')
     t0 = time.time()
     output_dataset: ndarray = model.fit_predict(numpy_pixel_data)
     t1 = time.time()
     print(f'Fit data in {t1-t0} seconds.')
     print(f'Found {len(set(model.labels_))} clusters; labels are of type {type(model.labels_)}')
+    print('Cluster centers:')
+    for center in model.cluster_centers_:
+        print(center)
 
     
 
