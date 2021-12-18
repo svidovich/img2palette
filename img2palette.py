@@ -7,8 +7,20 @@ from PIL import Image
 def read_image(path: str):
 
     image = Image.open(path)
-    image.show()
+    # show image with image.show()
 
+    size = image.size
+    width = size[0]
+    height = size[1]
+
+    print(f'Image mode is {image.mode}; image size is {image.size}')
+    pixels = list()
+    for x in range(width):
+        for y in range(height):
+            pixels.append(image.getpixel((x, y)))
+    print(f'Acquired {len(pixels)} pixels!')
+
+    
 
 def main():
     parser = argparse.ArgumentParser()
