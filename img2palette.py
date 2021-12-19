@@ -24,7 +24,7 @@ def mkpalette(colors: ndarray) -> Image:
     
     return palette_image
 
-def read_image(path: str):
+def read_image(path: str, express: bool = False):
 
     image = Image.open(path)
 
@@ -36,7 +36,11 @@ def read_image(path: str):
     pixels: List[Tuple] = list()
     for x in range(width):
         for y in range(height):
-            pixels.append(image.getpixel((x, y)))
+            if express:
+                if x % 2 == 0 and y % 2 == 0:
+                    pixels.append(image.getpixel((x, y)))
+            else:
+                pixels.append(image.getpixel((x, y)))
     print(f'Acquired {len(pixels)} pixels!')
     print('Packing pixels...')
     numpy_pixel_data: ndarray = numpy.array(pixels)
@@ -60,13 +64,14 @@ def read_image(path: str):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input-file', required=True, help='The image to read')
+    parser.add_argument('-x', '--express', action='store_true', required=False, help='Don\'t use the entire image for palette generation')
     args = parser.parse_args()
     input_file = args.input_file
     if not os.path.isfile(input_file):
         print(f'No such file {input_file}, exiting.')
         return
 
-    read_image(args.input_file)
+    read_image(args.input_file, express=args.express)
 
 
 if __name__ == '__main__':
