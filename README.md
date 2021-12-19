@@ -46,9 +46,9 @@ python3 img2palette.py -i <your image>
 
 The output is OK. We should tweak the options in the future.
 
-For this image:
+For this image by [Marco Ferrarin](https://www.flickr.com/photos/marcoferrarin/16367443658/):
 
-![A Beautiful Mosque. TODO: Cite!](media/mosque.jpg)
+![A Beautiful Mosque. ](media/mosque.jpg)
 
 We receive this palette:
 
