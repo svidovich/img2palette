@@ -3,15 +3,30 @@ import numpy
 import os
 import time
 
+from math import floor
 from numpy import ndarray
 from PIL import Image
+from numpy.lib.function_base import place
 from sklearn.cluster import KMeans
 from typing import List, Tuple
+
+def mkpalette(colors: ndarray) -> Image:
+    width = 200
+    height = 900
+    row_height = 100
+    image_size = (width, height)
+    palette_image = Image.new('RGB', image_size)
+    for index, color in enumerate(colors):
+        color_tuple = tuple(floor(component) for component in color)
+        for x in range(width):
+            for y in range(index * row_height, (index + 1) * row_height):
+                palette_image.putpixel((x, y), color_tuple)
+    
+    return palette_image
 
 def read_image(path: str):
 
     image = Image.open(path)
-    # show image with image.show()
 
     size = image.size
     width = size[0]
@@ -28,11 +43,6 @@ def read_image(path: str):
 
 
     print('Initiating model...')
-    # Estimate clustering structure from vector array.
-    # OPTICS (Ordering Points To Identify the Clustering Structure), closely related to DBSCAN, 
-    # finds core sample of high density and expands clusters from them [1]_. Unlike DBSCAN, keeps 
-    # cluster hierarchy for a variable neighborhood radius. Better suited for usage on large datasets 
-    # than the current sklearn implementation of DBSCAN.
     # Author's note:
     # In K Means, we choose the number of clusters we want. I like that.
     model = KMeans(n_clusters = 9)
@@ -41,12 +51,11 @@ def read_image(path: str):
     output_dataset: ndarray = model.fit_predict(numpy_pixel_data)
     t1 = time.time()
     print(f'Fit data in {t1-t0} seconds.')
-    print(f'Found {len(set(model.labels_))} clusters; labels are of type {type(model.labels_)}')
-    print('Cluster centers:')
-    for center in model.cluster_centers_:
-        print(center)
 
-    
+    print('Making palette...')
+    palette_image = mkpalette(model.cluster_centers_)
+    image.show()
+    palette_image.show()    
 
 def main():
     parser = argparse.ArgumentParser()
