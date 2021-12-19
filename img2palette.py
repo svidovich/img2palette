@@ -3,7 +3,7 @@ import numpy
 import os
 import time
 
-from math import floor
+from math import ceil, floor
 from numpy import ndarray
 from PIL import Image
 from numpy.lib.function_base import place
@@ -50,7 +50,7 @@ def read_image(path: str):
     t0 = time.time()
     output_dataset: ndarray = model.fit_predict(numpy_pixel_data)
     t1 = time.time()
-    print(f'Fit data in {t1-t0} seconds.')
+    print(f'Fit data in {ceil(t1-t0)} seconds.')
 
     print('Making palette...')
     palette_image = mkpalette(model.cluster_centers_)
