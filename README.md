@@ -46,8 +46,12 @@ python3 img2palette.py -i <your image>
 
 The output is OK. We should tweak the options in the future.
 
-For this image:
+For this image:\
+
 ![A Beautiful Mosque. TODO: Cite!](media/mosque.jpg)
 
-We receive this palette:
+We receive this palette:\
+
 ![An OK Palette representing the mosque.](media/mosque_palette.png)
+
+Perhaps the clustering could be adjusted for different / better results? But, for a first attempt, I'm pretty happy.
