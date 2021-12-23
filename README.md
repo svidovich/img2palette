@@ -42,6 +42,12 @@ Once that process is complete, run the program:
 python3 img2palette.py -i <your image>
 ```
 
+To run in express mode, pass `-x`:
+
+```
+python3 img2palette.py -x -i <your image>
+```
+
 ## Samples
 
 The output is OK. We should tweak the options in the future.
