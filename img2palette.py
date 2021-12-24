@@ -92,13 +92,14 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input-file', required=True, help='The image to read')
     parser.add_argument('-x', '--express', action='store_true', required=False, help='Don\'t use the entire image for palette generation')
+    parser.add_argument('-k', '--keyhole', action='store_true', required=False, help='Use keyhole style averaging to compute palettes')
     args = parser.parse_args()
     input_file = args.input_file
     if not os.path.isfile(input_file):
         print(f'No such file {input_file}, exiting.')
         return
 
-    read_image(args.input_file, express=args.express)
+    read_image(args.input_file, express=args.express, keyhole=args.keyhole)
 
 
 if __name__ == '__main__':
