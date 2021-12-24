@@ -16,8 +16,9 @@ def mkpalette(colors: ndarray) -> Image:
     row_height = 100
     image_size = (width, height)
     palette_image = Image.new('RGB', image_size)
-    for index, color in enumerate(colors):
-        color_tuple = tuple(floor(component) for component in color)
+    rounded_colors = numpy.floor(colors)
+    for index, color in enumerate(rounded_colors):
+        color_tuple = tuple(int(ordinate) for ordinate in color)
         for x in range(width):
             for y in range(index * row_height, (index + 1) * row_height):
                 palette_image.putpixel((x, y), color_tuple)
