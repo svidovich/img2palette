@@ -8,12 +8,13 @@ from numpy import ndarray
 from PIL import Image
 from numpy.lib.function_base import place
 from sklearn.cluster import KMeans
-from typing import List, Tuple
+from typing import List, Optional, Tuple
+
 
 def simple_mkpalette(model: KMeans, **kwargs) -> Image:
-    width = kwargs['width']
-    height = kwargs['height']
-    row_height = kwargs['row_height']
+    width: int = kwargs['width']
+    height: int = kwargs['height']
+    row_height: int = kwargs['row_height']
 
     image_size = (width, height)
     palette_image = Image.new('RGB', image_size)
@@ -25,24 +26,32 @@ def simple_mkpalette(model: KMeans, **kwargs) -> Image:
         for x in range(width):
             for y in range(index * row_height, (index + 1) * row_height):
                 palette_image.putpixel((x, y), color_tuple)
-    
     return palette_image
 
 
 def keyhole_mkpalette(model: KMeans, **kwargs) -> Image:
-    pass
+    width: int = kwargs['width']
+    height: int = kwargs['height']
+    row_height: int = kwargs['row_height']
+
+    image_size = (width, height)
+    palette_image = Image.new('RGB', image_size)
 
 
 def mkpalette(model: KMeans, **kwargs) -> Image:
     width = 200
     height = 900
     row_height = 100
-    return simple_mkpalette(model, width=width, height=height, row_height=row_height)
+    use_keyhole = kwargs.get('keyhole')
+    if use_keyhole:
+        return keyhole_mkpalette(model, width=width, height=height, row_height=row_height)
+    else:
+        return simple_mkpalette(model, width=width, height=height, row_height=row_height)
 
 
-
-def read_image(path: str, express: bool = False):
-
+def read_image(path: str, **kwargs):
+    express: bool = kwargs.get('express', False)
+    keyhole: bool = kwargs.get('keyhole', False)
     image = Image.open(path)
 
     size = image.size
@@ -74,9 +83,10 @@ def read_image(path: str, express: bool = False):
     print(f'Fit data in {ceil(t1-t0)} seconds.')
 
     print('Making palette...')
-    palette_image = mkpalette(model)
+    palette_image = mkpalette(model, use_keyhole=keyhole)
     image.show()
     palette_image.show()    
+
 
 def main():
     parser = argparse.ArgumentParser()
