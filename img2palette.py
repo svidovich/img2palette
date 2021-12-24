@@ -10,13 +10,16 @@ from numpy.lib.function_base import place
 from sklearn.cluster import KMeans
 from typing import List, Tuple
 
-def mkpalette(colors: ndarray) -> Image:
-    width = 200
-    height = 900
-    row_height = 100
+def simple_mkpalette(model: KMeans, **kwargs) -> Image:
+    width = kwargs['width']
+    height = kwargs['height']
+    row_height = kwargs['row_height']
+
     image_size = (width, height)
     palette_image = Image.new('RGB', image_size)
-    rounded_colors = numpy.floor(colors)
+
+    color_centers  = model.cluster_centers_
+    rounded_colors = numpy.floor(color_centers)
     for index, color in enumerate(rounded_colors):
         color_tuple = tuple(int(ordinate) for ordinate in color)
         for x in range(width):
@@ -24,6 +27,19 @@ def mkpalette(colors: ndarray) -> Image:
                 palette_image.putpixel((x, y), color_tuple)
     
     return palette_image
+
+
+def keyhole_mkpalette(model: KMeans, **kwargs) -> Image:
+    pass
+
+
+def mkpalette(model: KMeans, **kwargs) -> Image:
+    width = 200
+    height = 900
+    row_height = 100
+    return simple_mkpalette(model, width=width, height=height, row_height=row_height)
+
+
 
 def read_image(path: str, express: bool = False):
 
@@ -58,7 +74,7 @@ def read_image(path: str, express: bool = False):
     print(f'Fit data in {ceil(t1-t0)} seconds.')
 
     print('Making palette...')
-    palette_image = mkpalette(model.cluster_centers_)
+    palette_image = mkpalette(model)
     image.show()
     palette_image.show()    
 
