@@ -1,4 +1,5 @@
 import argparse
+import math
 import numpy
 import os
 import time
@@ -10,6 +11,7 @@ from numpy.lib.function_base import place
 from sklearn.cluster import KMeans
 from typing import List, Optional, Tuple
 
+KEYHOLE_DISTANCE = 2.5
 
 def simple_mkpalette(model: KMeans, **kwargs) -> Image:
     width: int = kwargs['width']
@@ -30,21 +32,46 @@ def simple_mkpalette(model: KMeans, **kwargs) -> Image:
 
 
 def keyhole_mkpalette(model: KMeans, **kwargs) -> Image:
+    pixel_data: ndarray = kwargs['pixel_data']
     width: int = kwargs['width']
     height: int = kwargs['height']
     row_height: int = kwargs['row_height']
 
     image_size = (width, height)
     palette_image = Image.new('RGB', image_size)
+    color_centers  = model.cluster_centers_
+    rounded_colors = numpy.floor(color_centers)
+    final_colors = dict()
+    for rounded_color in rounded_colors:
+        print(rounded_color)
+        # exit()
+        center_r: float = rounded_color[0]
+        center_g: float = rounded_color[1]
+        center_b: float = rounded_color[2]
+
+        center_colors = [center_r, center_g, center_b]
+        color_key = f'{center_r},{center_g},{center_b}'
+        final_colors[color_key] = list()
+
+        for rgb_color in pixel_data:
+            current_color = [
+                rgb_color[0],  # red, hopefully
+                rgb_color[1],  # green, hopefully
+                rgb_color[2],  # blue, hopefully
+            ]
+            if math.dist(center_colors, current_color) < KEYHOLE_DISTANCE:
+                final_colors[color_key].append(rgb_color)
+
 
 
 def mkpalette(model: KMeans, **kwargs) -> Image:
     width = 200
     height = 900
     row_height = 100
+    pixel_data = kwargs['pixel_data']
     use_keyhole = kwargs.get('keyhole')
     if use_keyhole:
-        return keyhole_mkpalette(model, width=width, height=height, row_height=row_height)
+        return keyhole_mkpalette(model, width=width, height=height, row_height=row_height, pixel_data=pixel_data)
     else:
         return simple_mkpalette(model, width=width, height=height, row_height=row_height)
 
@@ -53,7 +80,6 @@ def read_image(path: str, **kwargs):
     express: bool = kwargs.get('express', False)
     keyhole: bool = kwargs.get('keyhole', False)
     image = Image.open(path)
-
     size = image.size
     width = size[0]
     height = size[1]
@@ -83,7 +109,7 @@ def read_image(path: str, **kwargs):
     print(f'Fit data in {ceil(t1-t0)} seconds.')
 
     print('Making palette...')
-    palette_image = mkpalette(model, use_keyhole=keyhole)
+    palette_image = mkpalette(model, keyhole=keyhole, pixel_data=numpy_pixel_data)
     image.show()
     palette_image.show()    
 
