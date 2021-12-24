@@ -22,9 +22,9 @@ def average_3d(points: List[List]) -> List:
     total_z: int = sum([coordinate[2] for coordinate in points])
     try:
         return [
-            total_x / point_count,
-            total_y / point_count,
-            total_z / point_count,
+            total_x / point_count or 1,
+            total_y / point_count or 1,
+            total_z / point_count or 1,
         ]
     except ZeroDivisionError:
         return [0, 0, 0]
@@ -61,7 +61,9 @@ def keyhole_mkpalette(model: KMeans, **kwargs) -> Image:
     rounded_colors = numpy.floor(color_centers)
     final_colors = dict()
     print('Building globes...')
-    for rgb_color in pixel_data:
+    # TODO: This is a prime candidate for multiprocessing
+    for index, rgb_color in enumerate(pixel_data):
+        print(f'Working on color {index} / {len(pixel_data)}\r', end='' if index != len(pixel_data) else '\n')
         current_color = [
             rgb_color[0],  # red, hopefully
             rgb_color[1],  # green, hopefully
@@ -81,6 +83,8 @@ def keyhole_mkpalette(model: KMeans, **kwargs) -> Image:
                     ) < KEYHOLE_DISTANCE:
                 final_colors[color_key].append(rgb_color)
 
+    print(f'Color keys: {[x for x in final_colors.keys()]}')
+
     print('Obtaining averages....')
     averaged_colors = list()
     for colors in final_colors.values():
@@ -89,6 +93,8 @@ def keyhole_mkpalette(model: KMeans, **kwargs) -> Image:
                 colors
             )
         )
+
+    print(f'Color averages: {averaged_colors}')
 
     print('Building palette!')
     for index, color in enumerate(averaged_colors):
