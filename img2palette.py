@@ -9,9 +9,25 @@ from numpy import ndarray
 from PIL import Image
 from numpy.lib.function_base import place
 from sklearn.cluster import KMeans
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 KEYHOLE_DISTANCE = 2.5
+
+def average_3d(points: List[List]) -> List:
+    # I've had a half a bottle of slivo tonight. Let's
+    # do this the simple way and optimize later, shall we?
+    point_count = len(points)
+    total_x: int = sum([coordinate[0] for coordinate in points])
+    total_y: int = sum([coordinate[1] for coordinate in points])
+    total_z: int = sum([coordinate[2] for coordinate in points])
+    try:
+        return [
+            total_x / point_count,
+            total_y / point_count,
+            total_z / point_count,
+        ]
+    except ZeroDivisionError:
+        return [0, 0, 0]
 
 def simple_mkpalette(model: KMeans, **kwargs) -> Image:
     width: int = kwargs['width']
@@ -23,6 +39,8 @@ def simple_mkpalette(model: KMeans, **kwargs) -> Image:
 
     color_centers  = model.cluster_centers_
     rounded_colors = numpy.floor(color_centers)
+
+    print('Building palette!')
     for index, color in enumerate(rounded_colors):
         color_tuple = tuple(int(ordinate) for ordinate in color)
         for x in range(width):
@@ -42,27 +60,43 @@ def keyhole_mkpalette(model: KMeans, **kwargs) -> Image:
     color_centers  = model.cluster_centers_
     rounded_colors = numpy.floor(color_centers)
     final_colors = dict()
-    for rounded_color in rounded_colors:
-        print(rounded_color)
-        # exit()
-        center_r: float = rounded_color[0]
-        center_g: float = rounded_color[1]
-        center_b: float = rounded_color[2]
+    print('Building globes...')
+    for rgb_color in pixel_data:
+        current_color = [
+            rgb_color[0],  # red, hopefully
+            rgb_color[1],  # green, hopefully
+            rgb_color[2],  # blue, hopefully
+        ]
+        for index, rounded_color in enumerate(rounded_colors):
+            center_r: float = rounded_color[0]
+            center_g: float = rounded_color[1]
+            center_b: float = rounded_color[2]
 
-        center_colors = [center_r, center_g, center_b]
-        color_key = f'{center_r},{center_g},{center_b}'
-        final_colors[color_key] = list()
+            center_colors = [center_r, center_g, center_b]
+            color_key = f'{center_r},{center_g},{center_b}'
+            final_colors[color_key] = list()
 
-        for rgb_color in pixel_data:
-            current_color = [
-                rgb_color[0],  # red, hopefully
-                rgb_color[1],  # green, hopefully
-                rgb_color[2],  # blue, hopefully
-            ]
-            if math.dist(center_colors, current_color) < KEYHOLE_DISTANCE:
+            if numpy.linalg.norm(
+                numpy.array(center_colors) - numpy.array(current_color)
+                    ) < KEYHOLE_DISTANCE:
                 final_colors[color_key].append(rgb_color)
 
+    print('Obtaining averages....')
+    averaged_colors = list()
+    for colors in final_colors.values():
+        averaged_colors.append(
+            average_3d(
+                colors
+            )
+        )
 
+    print('Building palette!')
+    for index, color in enumerate(averaged_colors):
+        color_tuple = tuple(int(ordinate) for ordinate in color)
+        for x in range(width):
+            for y in range(index * row_height, (index + 1) * row_height):
+                palette_image.putpixel((x, y), color_tuple)
+    return palette_image
 
 def mkpalette(model: KMeans, **kwargs) -> Image:
     width = 200
