@@ -5,6 +5,7 @@ Turning images into '9-pan' palettes using KMeans clustering from sklearn.
 ## Requirements
 
 We require:
+
 - Pillow, for opening and processing images
 - Scikit Learn, for clustering
 
@@ -23,6 +24,8 @@ sudo apt-get install libatlas-base-dev
 ```
 
 The numpy developer documentation recommended either doing that or installing the version of numpy packaged for raspbian. Since we want to use the version of numpy included with sklearn for the least number of dependency headaches, we install libatlas instead.
+
+On Linux Mint, I found I needed to install imagemagick for the 'display' command. `apt search imagemagick` for additional details.
 
 **If you run into additional issues running the script, please add an Issue with your problem or solution to this repository. If you don't have a solution, I'll do my best to come up with one.**
 
