@@ -13,21 +13,25 @@ from typing import List, Tuple
 
 KEYHOLE_DISTANCE = 2.5
 
-def average_3d(points: List[List]) -> List:
-    # I've had a half a bottle of slivo tonight. Let's
-    # do this the simple way and optimize later, shall we?
-    point_count = len(points)
-    total_x: int = sum([coordinate[0] for coordinate in points])
-    total_y: int = sum([coordinate[1] for coordinate in points])
-    total_z: int = sum([coordinate[2] for coordinate in points])
-    try:
-        return [
-            total_x / point_count or 1,
-            total_y / point_count or 1,
-            total_z / point_count or 1,
-        ]
-    except ZeroDivisionError:
-        return [0, 0, 0]
+def average_3d(color_lists: List[List]) -> List:
+    output_averages = list()
+    for color_list in color_lists:
+        point_count = len(color_list)
+        print(f'Averaging over {point_count} pixels.')
+        total_x: int = sum([coordinate[0] for coordinate in color_list])
+        total_y: int = sum([coordinate[1] for coordinate in color_list])
+        total_z: int = sum([coordinate[2] for coordinate in color_list])
+        print(f'Totals: {total_x}, {total_y}, {total_z}.')
+        try:
+            output_averages.append([
+                floor(total_x / point_count or 1),
+                floor(total_y / point_count or 1),
+                floor(total_z / point_count or 1),
+            ])
+        except ZeroDivisionError:
+            output_averages.append([0, 0, 0])
+
+    return output_averages
 
 def simple_mkpalette(model: KMeans, **kwargs) -> Image:
     width: int = kwargs['width']
@@ -62,21 +66,23 @@ def keyhole_mkpalette(model: KMeans, **kwargs) -> Image:
     final_colors = dict()
     print('Building globes...')
     # TODO: This is a prime candidate for multiprocessing
-    for index, rgb_color in enumerate(pixel_data):
-        print(f'Working on color {index} / {len(pixel_data)}\r', end='' if index != len(pixel_data) else '\n')
-        current_color = [
-            rgb_color[0],  # red, hopefully
-            rgb_color[1],  # green, hopefully
-            rgb_color[2],  # blue, hopefully
-        ]
-        for index, rounded_color in enumerate(rounded_colors):
-            center_r: float = rounded_color[0]
-            center_g: float = rounded_color[1]
-            center_b: float = rounded_color[2]
+    for index, rounded_color in enumerate(rounded_colors):
+        print(f'Working on color {index}, {rounded_color}.')
+        center_r: float = rounded_color[0]
+        center_g: float = rounded_color[1]
+        center_b: float = rounded_color[2]
 
-            center_colors = [center_r, center_g, center_b]
-            color_key = f'{center_r},{center_g},{center_b}'
-            final_colors[color_key] = list()
+        center_colors = [center_r, center_g, center_b]
+        color_key = f'{center_r},{center_g},{center_b}'
+        final_colors[color_key] = list()
+        for pixel_index, rgb_color in enumerate(pixel_data):
+            if index % 1000 == 0:
+                print(f'Working on color {pixel_index} / {len(pixel_data)}\r', end='' if index != len(pixel_data) else '\n')
+            current_color = [
+                rgb_color[0],  # red, hopefully
+                rgb_color[1],  # green, hopefully
+                rgb_color[2],  # blue, hopefully
+            ]
 
             if numpy.linalg.norm(
                 numpy.array(center_colors) - numpy.array(current_color)
@@ -86,13 +92,7 @@ def keyhole_mkpalette(model: KMeans, **kwargs) -> Image:
     print(f'Color keys: {[x for x in final_colors.keys()]}')
 
     print('Obtaining averages....')
-    averaged_colors = list()
-    for colors in final_colors.values():
-        averaged_colors.append(
-            average_3d(
-                colors
-            )
-        )
+    averaged_colors: list = average_3d(final_colors.values())
 
     print(f'Color averages: {averaged_colors}')
 
