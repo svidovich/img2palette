@@ -17,11 +17,9 @@ def average_3d(color_lists: List[List]) -> List:
     output_averages = list()
     for color_list in color_lists:
         point_count = len(color_list)
-        print(f'Averaging over {point_count} pixels.')
         total_x: int = sum([coordinate[0] for coordinate in color_list])
         total_y: int = sum([coordinate[1] for coordinate in color_list])
         total_z: int = sum([coordinate[2] for coordinate in color_list])
-        print(f'Totals: {total_x}, {total_y}, {total_z}.')
         try:
             output_averages.append([
                 floor(total_x / point_count or 1),
@@ -77,7 +75,7 @@ def keyhole_mkpalette(model: KMeans, **kwargs) -> Image:
         final_colors[color_key] = list()
         for pixel_index, rgb_color in enumerate(pixel_data):
             if index % 1000 == 0:
-                print(f'Working on color {pixel_index} / {len(pixel_data)}\r', end='' if index != len(pixel_data) else '\n')
+                print(f'Working on pixel {pixel_index} / {len(pixel_data)}\r', end='' if index != len(pixel_data) else '\n')
             current_color = [
                 rgb_color[0],  # red, hopefully
                 rgb_color[1],  # green, hopefully
