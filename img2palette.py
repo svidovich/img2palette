@@ -11,6 +11,7 @@ from numpy.lib.function_base import place
 from sklearn.cluster import KMeans
 from typing import List, Tuple
 
+PALETTE_MAX = 20
 KEYHOLE_DISTANCE = 2.5
 
 def average_3d(color_lists: List[List]) -> List:
@@ -162,9 +163,9 @@ def main():
     args = parser.parse_args()
 
     color_count = args.color_count
-    if color_count > 20:
-        print(f'Whoa there cowboy, {color_count} is too many colors. We will be here all night. I will default to my maximum, 20.')
-        color_count = 20
+    if color_count > PALETTE_MAX:
+        print(f'Whoa there cowboy, {color_count} is too many colors. We will be here all night. I will default to my maximum, {PALETTE_MAX}.')
+        color_count = PALETTE_MAX
     input_file = args.input_file
     if not os.path.isfile(input_file):
         print(f'No such file {input_file}, exiting.')
