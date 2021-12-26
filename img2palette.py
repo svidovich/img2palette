@@ -87,7 +87,6 @@ def keyhole_mkpalette(model: KMeans, **kwargs) -> Image:
                     ) < KEYHOLE_DISTANCE:
                 final_colors[color_key].append(rgb_color)
 
-    print(f'Color keys: {[x for x in final_colors.keys()]}')
 
     print('Obtaining averages....')
     averaged_colors: list = average_3d(final_colors.values())
@@ -103,8 +102,9 @@ def keyhole_mkpalette(model: KMeans, **kwargs) -> Image:
     return palette_image
 
 def mkpalette(model: KMeans, **kwargs) -> Image:
+    color_count: int = kwargs.get('color_count', 9)
     width = 200
-    height = 900
+    height = 100 * color_count
     row_height = 100
     pixel_data = kwargs['pixel_data']
     use_keyhole = kwargs.get('keyhole')
@@ -117,6 +117,7 @@ def mkpalette(model: KMeans, **kwargs) -> Image:
 def read_image(path: str, **kwargs):
     express: bool = kwargs.get('express', False)
     keyhole: bool = kwargs.get('keyhole', False)
+    color_count: int = kwargs.get('color_count', 9)
     image = Image.open(path)
     size = image.size
     width = size[0]
@@ -139,7 +140,7 @@ def read_image(path: str, **kwargs):
     print('Initiating model...')
     # Author's note:
     # In K Means, we choose the number of clusters we want. I like that.
-    model = KMeans(n_clusters = 9)
+    model = KMeans(n_clusters = color_count)
     print('Fitting ( this may take some time )...')
     t0 = time.time()
     output_dataset: ndarray = model.fit_predict(numpy_pixel_data)
@@ -147,7 +148,7 @@ def read_image(path: str, **kwargs):
     print(f'Fit data in {ceil(t1-t0)} seconds.')
 
     print('Making palette...')
-    palette_image = mkpalette(model, keyhole=keyhole, pixel_data=numpy_pixel_data)
+    palette_image = mkpalette(model, keyhole=keyhole, pixel_data=numpy_pixel_data, color_count=color_count)
     image.show()
     palette_image.show()    
 
@@ -157,13 +158,14 @@ def main():
     parser.add_argument('-i', '--input-file', required=True, help='The image to read')
     parser.add_argument('-x', '--express', action='store_true', required=False, help='Don\'t use the entire image for palette generation')
     parser.add_argument('-k', '--keyhole', action='store_true', required=False, help='Use keyhole style averaging to compute palettes')
+    parser.add_argument('-c', '--color-count', required=False, default=9, type=int, help='Number of colors in the final palette. Defaults to 9.')
     args = parser.parse_args()
     input_file = args.input_file
     if not os.path.isfile(input_file):
         print(f'No such file {input_file}, exiting.')
         return
 
-    read_image(args.input_file, express=args.express, keyhole=args.keyhole)
+    read_image(args.input_file, express=args.express, keyhole=args.keyhole, color_count=args.color_count)
 
 
 if __name__ == '__main__':
