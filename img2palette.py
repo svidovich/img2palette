@@ -160,6 +160,11 @@ def main():
     parser.add_argument('-k', '--keyhole', action='store_true', required=False, help='Use keyhole style averaging to compute palettes')
     parser.add_argument('-c', '--color-count', required=False, default=9, type=int, help='Number of colors in the final palette. Defaults to 9.')
     args = parser.parse_args()
+
+    color_count = args.color_count
+    if color_count > 20:
+        print(f'Whoa there cowboy, {color_count} is too many colors. We will be here all night. I will default to my maximum, 20.')
+        color_count = 20
     input_file = args.input_file
     if not os.path.isfile(input_file):
         print(f'No such file {input_file}, exiting.')
