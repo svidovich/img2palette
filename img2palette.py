@@ -4,7 +4,9 @@ import numpy
 import os
 import time
 
+from functools import partial
 from math import ceil, floor
+from multiprocessing import cpu_count, Pool, Queue
 from numpy import ndarray
 from PIL import Image
 from numpy.lib.function_base import place
@@ -51,6 +53,36 @@ def simple_mkpalette(model: KMeans, **kwargs) -> Image:
                 palette_image.putpixel((x, y), color_tuple)
     return palette_image
 
+final_colors = dict()
+
+def keyhole_globe_generator(**kwargs):
+    rounded_color: ndarray = kwargs['rounded_color']
+    pixel_data: ndarray = kwargs['pixel_data']
+    queue: Queue = kwargs['queue']
+
+    center_r: float = rounded_color[0]
+    center_g: float = rounded_color[1]
+    center_b: float = rounded_color[2]
+
+    center_colors = [center_r, center_g, center_b]
+    color_key = f'{center_r},{center_g},{center_b}'
+
+    color_list = list()
+    for rgb_color in pixel_data:
+        current_color = [
+            rgb_color[0],  # red, hopefully
+            rgb_color[1],  # green, hopefully
+            rgb_color[2],  # blue, hopefully
+        ]
+
+        if numpy.linalg.norm(
+            numpy.array(center_colors) - numpy.array(current_color)
+                ) < KEYHOLE_DISTANCE:
+            color_list.append(rgb_color)
+
+    colors = queue.get()
+    colors[color_key] = color_list
+
 
 def keyhole_mkpalette(model: KMeans, **kwargs) -> Image:
     pixel_data: ndarray = kwargs['pixel_data']
@@ -64,30 +96,23 @@ def keyhole_mkpalette(model: KMeans, **kwargs) -> Image:
     rounded_colors = numpy.floor(color_centers)
     final_colors = dict()
     print('Building globes...')
-    # TODO: This is a prime candidate for multiprocessing
-    for index, rounded_color in enumerate(rounded_colors):
-        print(f'Working on color {index}, {rounded_color}.')
-        center_r: float = rounded_color[0]
-        center_g: float = rounded_color[1]
-        center_b: float = rounded_color[2]
 
-        center_colors = [center_r, center_g, center_b]
-        color_key = f'{center_r},{center_g},{center_b}'
-        final_colors[color_key] = list()
-        for pixel_index, rgb_color in enumerate(pixel_data):
-            if index % 1000 == 0:
-                print(f'Working on pixel {pixel_index} / {len(pixel_data)}\r', end='' if index != len(pixel_data) else '\n')
-            current_color = [
-                rgb_color[0],  # red, hopefully
-                rgb_color[1],  # green, hopefully
-                rgb_color[2],  # blue, hopefully
-            ]
+    processing_pool = Pool(cpu_count())
+    processing_queue = Queue()
+    # Make the final colors dictionary available for processes to use
+    # between them.
+    processing_queue.put(final_colors)
 
-            if numpy.linalg.norm(
-                numpy.array(center_colors) - numpy.array(current_color)
-                    ) < KEYHOLE_DISTANCE:
-                final_colors[color_key].append(rgb_color)
-
+    processing_pool.map(
+        keyhole_globe_generator,
+        [
+            {
+            'rounded_color': rounded_color,
+            'pixel_data': pixel_data,
+            'queue': queue,
+            } for rounded_color in rounded_colors
+        ]
+    )
 
     print('Obtaining averages....')
     averaged_colors: list = average_3d(final_colors.values())
