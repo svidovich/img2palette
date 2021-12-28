@@ -6,7 +6,7 @@ import time
 
 from functools import partial
 from math import ceil, floor
-from multiprocessing import cpu_count, Pool, Queue
+from multiprocessing import cpu_count, Manager, Pool, Queue
 from numpy import ndarray
 from PIL import Image
 from numpy.lib.function_base import place
@@ -55,7 +55,7 @@ def simple_mkpalette(model: KMeans, **kwargs) -> Image:
 
 final_colors = dict()
 
-def keyhole_globe_generator(**kwargs):
+def keyhole_globe_generator(kwargs):
     rounded_color: ndarray = kwargs['rounded_color']
     pixel_data: ndarray = kwargs['pixel_data']
     queue: Queue = kwargs['queue']
@@ -98,7 +98,8 @@ def keyhole_mkpalette(model: KMeans, **kwargs) -> Image:
     print('Building globes...')
 
     processing_pool = Pool(cpu_count())
-    processing_queue = Queue()
+    processing_manager = Manager()
+    processing_queue = processing_manager.Queue()
     # Make the final colors dictionary available for processes to use
     # between them.
     processing_queue.put(final_colors)
@@ -109,7 +110,7 @@ def keyhole_mkpalette(model: KMeans, **kwargs) -> Image:
             {
             'rounded_color': rounded_color,
             'pixel_data': pixel_data,
-            'queue': queue,
+            'queue': processing_queue,
             } for rounded_color in rounded_colors
         ]
     )
