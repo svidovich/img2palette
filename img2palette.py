@@ -82,6 +82,7 @@ def keyhole_globe_generator(kwargs):
 
     colors = queue.get()
     colors[color_key] = color_list
+    queue.put(colors)
 
 
 def keyhole_mkpalette(model: KMeans, **kwargs) -> Image:
@@ -115,10 +116,10 @@ def keyhole_mkpalette(model: KMeans, **kwargs) -> Image:
         ]
     )
 
+    final_colors = processing_queue.get()
+
     print('Obtaining averages....')
     averaged_colors: list = average_3d(final_colors.values())
-
-    print(f'Color averages: {averaged_colors}')
 
     print('Building palette!')
     for index, color in enumerate(averaged_colors):
